@@ -11,6 +11,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# TypeScript build artifacts
+*.tsbuildinfo
+
 # Env files
 .env
 .env.*
