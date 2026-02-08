@@ -29,6 +29,8 @@ export interface JobSearchParams {
   keyword?: string;
   location?: string;
   category?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
 }

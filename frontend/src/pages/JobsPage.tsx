@@ -11,6 +11,8 @@ const defaultFilters: JobSearchParams = {
   keyword: '',
   location: '',
   category: '',
+  sortBy: 'postedDate',
+  sortDir: 'desc',
   page: 1,
   pageSize: 10,
 };
@@ -86,6 +88,50 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
             onChange={(event) => setFilters({ ...filters, category: event.target.value })}
             placeholder="e.g. Engineering"
           />
+        </label>
+        <label className="field">
+          Sort by
+          <select
+            value={filters.sortBy}
+            onChange={(event) =>
+              setFilters({
+                ...filters,
+                sortBy: event.target.value,
+                page: 1,
+              })
+            }
+          >
+            {[
+              { value: 'postedDate', label: 'Posted date' },
+              { value: 'createdAt', label: 'Ingested date' },
+              { value: 'title', label: 'Title' },
+              { value: 'company', label: 'Company' },
+              { value: 'location', label: 'Location' },
+              { value: 'jobType', label: 'Job type' },
+              { value: 'category', label: 'Category' },
+              { value: 'source', label: 'Source' },
+            ].map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          Sort direction
+          <select
+            value={filters.sortDir}
+            onChange={(event) =>
+              setFilters({
+                ...filters,
+                sortDir: event.target.value as JobSearchParams['sortDir'],
+                page: 1,
+              })
+            }
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
         </label>
         <label className="field">
           Page size
