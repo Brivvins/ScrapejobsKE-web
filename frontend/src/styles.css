@@ -247,6 +247,17 @@ button.ghost {
   color: var(--muted);
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.summary-grid p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 .status-badge {
   display: inline-flex;
   align-items: center;
