@@ -1,5 +1,5 @@
 import { fetchJson } from './client';
-import type { ScrapeLog, ScrapeLogFilters, ScrapeSourceStatus } from '../types/admin';
+import type { ScrapeLog, ScrapeLogFilters, ScrapeSourceStatus, ScrapeSummary } from '../types/admin';
 import type { Page } from '../types/job';
 
 export async function fetchScrapeLogs(
@@ -25,4 +25,15 @@ export async function fetchScrapeStatus(
   token?: string
 ): Promise<ScrapeSourceStatus[]> {
   return fetchJson<ScrapeSourceStatus[]>(`${adminBase}/scrape/status`, {}, token);
+}
+
+export async function fetchScrapeSummary(
+  adminBase: string,
+  token?: string
+): Promise<ScrapeSummary> {
+  return fetchJson<ScrapeSummary>(`${adminBase}/scrape/summary`, {}, token);
+}
+
+export async function runScraper(adminBase: string, token?: string): Promise<void> {
+  await fetchJson(`${adminBase}/scrape/run`, { method: 'GET' }, token);
 }
