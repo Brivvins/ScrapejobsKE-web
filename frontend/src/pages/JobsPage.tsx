@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { searchJobs } from '../api/jobs';
 import JobCard from '../components/JobCard';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Select } from '../components/ui/select';
 import type { Job, JobSearchParams, Page } from '../types/job';
 
 interface JobsPageProps {
@@ -47,159 +51,184 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
   const totalPages = results?.totalPages ?? 0;
 
   return (
-    <section className="panel">
-      <div className="panel-header">
-        <div>
-          <h2>Public Jobs</h2>
-          <p>GET {apiBase}/jobs/search</p>
-        </div>
-        <p className="status-line">
-          {results ? `${results.totalElements} total jobs` : 'No results yet'}
-        </p>
-      </div>
+    <section className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Public Jobs</CardTitle>
+          <CardDescription>Search curated Kenyan job listings.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid gap-4 md:grid-cols-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void loadJobs({ ...filters, page: 1 });
+            }}
+          >
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Keyword
+              </label>
+              <Input
+                value={filters.keyword}
+                onChange={(event) => setFilters({ ...filters, keyword: event.target.value })}
+                placeholder="e.g. frontend"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Location
+              </label>
+              <Input
+                value={filters.location}
+                onChange={(event) => setFilters({ ...filters, location: event.target.value })}
+                placeholder="e.g. Nairobi"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Category
+              </label>
+              <Input
+                value={filters.category}
+                onChange={(event) => setFilters({ ...filters, category: event.target.value })}
+                placeholder="e.g. Engineering"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Sort by
+              </label>
+              <Select
+                value={filters.sortBy}
+                onChange={(event) =>
+                  setFilters({
+                    ...filters,
+                    sortBy: event.target.value,
+                    page: 1,
+                  })
+                }
+              >
+                {[
+                  { value: 'postedDate', label: 'Posted date' },
+                  { value: 'createdAt', label: 'Ingested date' },
+                  { value: 'title', label: 'Title' },
+                  { value: 'company', label: 'Company' },
+                  { value: 'location', label: 'Location' },
+                  { value: 'jobType', label: 'Job type' },
+                  { value: 'category', label: 'Category' },
+                  { value: 'source', label: 'Source' },
+                ].map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Sort direction
+              </label>
+              <Select
+                value={filters.sortDir}
+                onChange={(event) =>
+                  setFilters({
+                    ...filters,
+                    sortDir: event.target.value as JobSearchParams['sortDir'],
+                    page: 1,
+                  })
+                }
+              >
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Page size
+              </label>
+              <Select
+                value={filters.pageSize}
+                onChange={(event) =>
+                  setFilters({
+                    ...filters,
+                    pageSize: Number(event.target.value),
+                    page: 1,
+                  })
+                }
+              >
+                {[10, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="flex items-end gap-3">
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Loading...' : 'Search'}
+              </Button>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => void loadJobs({ ...defaultFilters })}
+                disabled={loading}
+              >
+                Reset
+              </Button>
+            </div>
+          </form>
 
-      <form
-        className="filters"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void loadJobs({ ...filters, page: 1 });
-        }}
-      >
-        <label className="field">
-          Keyword
-          <input
-            value={filters.keyword}
-            onChange={(event) => setFilters({ ...filters, keyword: event.target.value })}
-            placeholder="e.g. frontend"
-          />
-        </label>
-        <label className="field">
-          Location
-          <input
-            value={filters.location}
-            onChange={(event) => setFilters({ ...filters, location: event.target.value })}
-            placeholder="e.g. Nairobi"
-          />
-        </label>
-        <label className="field">
-          Category
-          <input
-            value={filters.category}
-            onChange={(event) => setFilters({ ...filters, category: event.target.value })}
-            placeholder="e.g. Engineering"
-          />
-        </label>
-        <label className="field">
-          Sort by
-          <select
-            value={filters.sortBy}
-            onChange={(event) =>
-              setFilters({
-                ...filters,
-                sortBy: event.target.value,
-                page: 1,
-              })
-            }
-          >
-            {[
-              { value: 'postedDate', label: 'Posted date' },
-              { value: 'createdAt', label: 'Ingested date' },
-              { value: 'title', label: 'Title' },
-              { value: 'company', label: 'Company' },
-              { value: 'location', label: 'Location' },
-              { value: 'jobType', label: 'Job type' },
-              { value: 'category', label: 'Category' },
-              { value: 'source', label: 'Source' },
-            ].map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          Sort direction
-          <select
-            value={filters.sortDir}
-            onChange={(event) =>
-              setFilters({
-                ...filters,
-                sortDir: event.target.value as JobSearchParams['sortDir'],
-                page: 1,
-              })
-            }
-          >
-            <option value="desc">Descending</option>
-            <option value="asc">Ascending</option>
-          </select>
-        </label>
-        <label className="field">
-          Page size
-          <select
-            value={filters.pageSize}
-            onChange={(event) =>
-              setFilters({
-                ...filters,
-                pageSize: Number(event.target.value),
-                page: 1,
-              })
-            }
-          >
-            {[10, 20, 50].map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="actions">
-          <button className="primary" type="submit" disabled={loading}>
-            {loading ? 'Loading...' : 'Search'}
-          </button>
-          <button
-            className="ghost"
-            type="button"
-            onClick={() => void loadJobs({ ...defaultFilters })}
-            disabled={loading}
-          >
-            Reset
-          </button>
-        </div>
-      </form>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {results ? `${results.totalElements} jobs` : 'No results yet'}
+            </span>
+            <span className="font-mono text-xs">GET {apiBase}/jobs/search</span>
+          </div>
 
-      {error ? <p className="status-line">{error}</p> : null}
+          {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
+        </CardContent>
+      </Card>
 
-      <div className="jobs-grid">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {jobs.map((job, index) => (
           <JobCard key={job.id ?? `${job.title}-${index}`} job={job} index={index} />
         ))}
       </div>
 
       {!loading && jobs.length === 0 ? (
-        <p className="status-line">No jobs match the current filters.</p>
+        <Card>
+          <CardContent className="text-sm text-muted-foreground">
+            No jobs match the current filters. Try a different keyword or location.
+          </CardContent>
+        </Card>
       ) : null}
 
-      <div className="actions">
-        <button
-          className="ghost"
-          type="button"
-          onClick={() => void loadJobs({ ...filters, page: Math.max(1, pageNumber - 1) })}
-          disabled={loading || pageNumber <= 1}
-        >
-          Previous
-        </button>
-        <span className="status-line">
-          Page {pageNumber} of {Math.max(totalPages, 1)}
-        </span>
-        <button
-          className="ghost"
-          type="button"
-          onClick={() => void loadJobs({ ...filters, page: pageNumber + 1 })}
-          disabled={loading || (results?.last ?? false)}
-        >
-          Next
-        </button>
-      </div>
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-muted-foreground">
+            Page {pageNumber} of {Math.max(totalPages, 1)}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void loadJobs({ ...filters, page: Math.max(1, pageNumber - 1) })}
+              disabled={loading || pageNumber <= 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void loadJobs({ ...filters, page: pageNumber + 1 })}
+              disabled={loading || (results?.last ?? false)}
+            >
+              Next
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </section>
   );
 }

@@ -1,3 +1,5 @@
+import { Badge } from './ui/badge';
+import { Card, CardContent } from './ui/card';
 import type { Job } from '../types/job';
 
 const formatDate = (value?: string) => {
@@ -12,25 +14,42 @@ interface JobCardProps {
 
 export default function JobCard({ job, index }: JobCardProps) {
   return (
-    <article className="job-card" style={{ animationDelay: `${index * 40}ms` }}>
-      <div>
-        <p className="pill">{job.category || 'Uncategorized'}</p>
-        <h3 className="job-title">{job.title}</h3>
-        <div className="job-meta">
-          <span>{job.company}</span>
-          <span>{job.location || 'Remote/Unlisted'}</span>
-          <span>{job.jobType || 'Role type N/A'}</span>
+    <Card className="fade-up border-border/70 bg-background/70" style={{ animationDelay: `${index * 40}ms` }}>
+      <CardContent className="flex h-full flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Badge className="bg-primary/10 text-primary">
+            {job.category || 'Uncategorized'}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {job.source || 'Unknown source'}
+          </span>
         </div>
-      </div>
-      <div className="job-footer">
-        <span>Posted {formatDate(job.postedDate)}</span>
-        <span>{job.source || 'Unknown source'}</span>
-      </div>
-      {job.sourceUrl ? (
-        <a href={job.sourceUrl} target="_blank" rel="noreferrer">
-          View source
-        </a>
-      ) : null}
-    </article>
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold leading-snug">{job.title}</h3>
+          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+            <span>{job.company}</span>
+            <span>•</span>
+            <span>{job.location || 'Remote/Unlisted'}</span>
+            <span>•</span>
+            <span>{job.jobType || 'Role type N/A'}</span>
+          </div>
+        </div>
+        <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
+          <span>Posted {formatDate(job.postedDate)}</span>
+          {job.sourceUrl ? (
+            <a
+              href={job.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-primary hover:underline"
+            >
+              View source
+            </a>
+          ) : (
+            <span className="text-muted-foreground">Source link N/A</span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

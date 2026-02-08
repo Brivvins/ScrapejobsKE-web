@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchScrapeLogs, fetchScrapeStatus, fetchScrapeSummary, runScraper } from '../api/admin';
-import { login } from '../api/auth';
 import StatusBadge from '../components/StatusBadge';
-import type { AuthResponse, LoginRequest } from '../types/auth';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Select } from '../components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import type { ScrapeLog, ScrapeSourceStatus, ScrapeStatus, ScrapeSummary } from '../types/admin';
 import type { Page } from '../types/job';
 
 interface AdminPageProps {
   apiBase: string;
   adminBase: string;
+  token: string;
+  onLogout: () => void;
 }
 
 type LogFilters = {
@@ -27,24 +33,24 @@ const defaultLogFilters: LogFilters = {
   size: 20,
 };
 
-const TOKEN_STORAGE_KEY = 'scrapejobsAdminToken';
-
-export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_STORAGE_KEY) ?? '');
+export default function AdminPage({ apiBase, adminBase, token, onLogout }: AdminPageProps) {
   const [logFilters, setLogFilters] = useState<LogFilters>(defaultLogFilters);
   const [logsPage, setLogsPage] = useState<Page<ScrapeLog> | null>(null);
   const [status, setStatus] = useState<ScrapeSourceStatus[]>([]);
   const [summary, setSummary] = useState<ScrapeSummary | null>(null);
   const [loading, setLoading] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const isAuthenticated = token.trim().length > 0;
 
+  useEffect(() => {
+    if (isAuthenticated && logsPage === null && !loading) {
+      void loadAdminData(logFilters);
+    }
+  }, [isAuthenticated]);
+
   const loadAdminData = async (nextFilters: LogFilters = logFilters) => {
+    if (!isAuthenticated) return;
     setLoading(true);
     setError(null);
 
@@ -70,52 +76,13 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
       setLogFilters(nextFilters);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load admin data.';
-      setError(message);
+      if (message.toLowerCase().includes('forbidden') || message.includes('403')) {
+        setError('Session expired or unauthorized. Please sign in again.');
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setAuthMessage('Email and password are required.');
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthMessage(null);
-    try {
-      const payload: LoginRequest = { email, password };
-      const response: AuthResponse = await login(apiBase, payload);
-      setToken(response.token);
-      sessionStorage.setItem(TOKEN_STORAGE_KEY, response.token);
-      setPassword('');
-      setAuthMessage('Signed in. You can now load admin data.');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to authenticate.';
-      setAuthMessage(message);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    setToken('');
-    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-    setLogsPage(null);
-    setStatus([]);
-    setSummary(null);
-    setError(null);
-    setAuthMessage(null);
-    setActionMessage(null);
-  };
-
-  const handleTokenChange = (value: string) => {
-    setToken(value);
-    if (value.trim()) {
-      sessionStorage.setItem(TOKEN_STORAGE_KEY, value);
-    } else {
-      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     }
   };
 
@@ -143,297 +110,267 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
   const totalPages = logsPage?.totalPages ?? 0;
 
   return (
-    <section className="panel">
-      <div className="panel-header">
-        <div>
-          <h2>Admin Monitoring</h2>
-          <p>POST {apiBase}/auth/login | GET {adminBase}/scrape/logs | GET {adminBase}/scrape/status</p>
-        </div>
-        <p className="status-line">Sign in to view admin data.</p>
-      </div>
+    <section className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <CardTitle>Admin Monitoring</CardTitle>
+              <CardDescription>Secure visibility into scrape health and execution logs.</CardDescription>
+            </div>
+            <Badge className="bg-secondary text-secondary-foreground">Secure</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+            <span>
+              POST {apiBase}/auth/login · GET {adminBase}/scrape/logs · GET {adminBase}/scrape/status
+            </span>
+            {isAuthenticated ? (
+              <Button variant="outline" size="sm" onClick={onLogout}>
+                Sign out
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
 
       {!isAuthenticated ? (
-        <>
-          <div className="filters">
-            <label className="field">
-              Admin email
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="admin@example.com"
-                autoComplete="username"
-              />
-            </label>
-            <label className="field">
-              Password
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter password"
-                autoComplete="current-password"
-              />
-            </label>
-            <div className="actions">
-              <button className="primary" type="button" onClick={() => void handleLogin()}>
-                {authLoading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </div>
-          </div>
-
-          {authMessage ? <p className="status-line">{authMessage}</p> : null}
-
-          <div className="filters" style={{ marginTop: '16px' }}>
-            <label className="field">
-              Existing token
-              <input
-                type="password"
-                value={token}
-                onChange={(event) => handleTokenChange(event.target.value)}
-                placeholder="Paste admin token"
-              />
-            </label>
-          </div>
-
-          <p className="status-line">Admin content is hidden until you sign in.</p>
-        </>
+        <Card>
+          <CardHeader>
+            <CardTitle>Admin access required</CardTitle>
+            <CardDescription>Use the Admin access link in the footer to sign in.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Once you sign in, this console will load logs, source health, and run controls.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <>
-          <div className="filters" style={{ marginTop: '16px' }}>
-            <label className="field">
-              Session token
-              <input
-                type="password"
-                value={token}
-                onChange={(event) => handleTokenChange(event.target.value)}
-                placeholder="Stored admin token"
-              />
-            </label>
-            <div className="actions">
-              <button className="ghost" type="button" onClick={handleLogout}>
-                Sign out
-              </button>
-            </div>
-          </div>
-
-          {authMessage ? <p className="status-line">{authMessage}</p> : null}
-          {actionMessage ? <p className="status-line">{actionMessage}</p> : null}
-
-          <div className="filters" style={{ marginTop: '16px' }}>
-            <label className="field">
-              Log source
-              <input
-                value={logFilters.source}
-                onChange={(event) =>
-                  setLogFilters({ ...logFilters, source: event.target.value, page: 1 })
-                }
-                placeholder="e.g. BrighterMonday"
-              />
-            </label>
-            <label className="field">
-              Status
-              <select
-                value={logFilters.status}
-                onChange={(event) =>
-                  setLogFilters({
-                    ...logFilters,
-                    status: event.target.value as LogFilters['status'],
-                    page: 1,
-                  })
-                }
-              >
-                <option value="">Any status</option>
-                {statusOptions.map((statusOption) => (
-                  <option key={statusOption} value={statusOption}>
-                    {statusOption}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              Page size
-              <select
-                value={logFilters.size}
-                onChange={(event) =>
-                  setLogFilters({
-                    ...logFilters,
-                    size: Number(event.target.value),
-                    page: 1,
-                  })
-                }
-              >
-                {[10, 20, 50].map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="actions">
-              <button className="primary" type="button" onClick={() => void loadAdminData(logFilters)}>
-                {loading ? 'Loading...' : 'Load Logs & Status'}
-              </button>
-              <button className="ghost" type="button" onClick={() => void handleRunScraper()}>
-                Run Scraper
-              </button>
-              <button className="ghost" type="button" onClick={resetFilters} disabled={loading}>
-                Reset
-              </button>
-            </div>
-          </div>
-
-          {error ? <p className="status-line">{error}</p> : null}
+          <Card>
+            <CardHeader>
+              <CardTitle>Filters & actions</CardTitle>
+              <CardDescription>Filter scrape logs and trigger a fresh run.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Log source
+                  </label>
+                  <Input
+                    value={logFilters.source}
+                    onChange={(event) =>
+                      setLogFilters({ ...logFilters, source: event.target.value, page: 1 })
+                    }
+                    placeholder="e.g. BrighterMonday"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Status
+                  </label>
+                  <Select
+                    value={logFilters.status}
+                    onChange={(event) =>
+                      setLogFilters({
+                        ...logFilters,
+                        status: event.target.value as LogFilters['status'],
+                        page: 1,
+                      })
+                    }
+                  >
+                    <option value="">Any status</option>
+                    {statusOptions.map((statusOption) => (
+                      <option key={statusOption} value={statusOption}>
+                        {statusOption}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Page size
+                  </label>
+                  <Select
+                    value={logFilters.size}
+                    onChange={(event) =>
+                      setLogFilters({
+                        ...logFilters,
+                        size: Number(event.target.value),
+                        page: 1,
+                      })
+                    }
+                  >
+                    {[10, 20, 50].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={() => void loadAdminData(logFilters)} disabled={loading}>
+                  {loading ? 'Loading...' : 'Load Logs & Status'}
+                </Button>
+                <Button variant="secondary" onClick={() => void handleRunScraper()}>
+                  Run Scraper
+                </Button>
+                <Button variant="outline" onClick={resetFilters} disabled={loading}>
+                  Reset
+                </Button>
+                {error ? <span className="text-sm text-destructive">{error}</span> : null}
+                {actionMessage ? (
+                  <span className="text-sm text-muted-foreground">{actionMessage}</span>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
 
           {summary ? (
-            <div className="panel" style={{ marginTop: '24px' }}>
-              <div className="panel-header">
-                <div>
-                  <h2>Summary</h2>
-                  <p>Latest run overview across all sources</p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Summary</CardTitle>
+                <CardDescription>Latest run overview across all sources.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-4">
+                  {[
+                    { label: 'Sources', value: summary.totalSources },
+                    { label: 'Success', value: summary.successCount },
+                    { label: 'Partial', value: summary.partialCount },
+                    { label: 'Failed', value: summary.failedCount },
+                    { label: 'Running', value: summary.runningCount },
+                    { label: 'Latest started', value: summary.latestStartedAt ?? 'N/A' },
+                    { label: 'Latest completed', value: summary.latestCompletedAt ?? 'N/A' },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-lg border border-border/60 bg-background/70 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {item.label}
+                      </p>
+                      <p className="text-base font-semibold">{item.value}</p>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="summary-grid">
-                <div>
-                  <p className="eyebrow">Sources</p>
-                  <p>{summary.totalSources}</p>
-                </div>
-                <div>
-                  <p className="eyebrow">Success</p>
-                  <p>{summary.successCount}</p>
-                </div>
-                <div>
-                  <p className="eyebrow">Partial</p>
-                  <p>{summary.partialCount}</p>
-                </div>
-                <div>
-                  <p className="eyebrow">Failed</p>
-                  <p>{summary.failedCount}</p>
-                </div>
-                <div>
-                  <p className="eyebrow">Running</p>
-                  <p>{summary.runningCount}</p>
-                </div>
-                <div>
-                  <p className="eyebrow">Latest started</p>
-                  <p>{summary.latestStartedAt ?? 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="eyebrow">Latest completed</p>
-                  <p>{summary.latestCompletedAt ?? 'N/A'}</p>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ) : null}
 
-          <div className="panel" style={{ marginTop: '24px' }}>
-            <div className="panel-header">
-              <div>
-                <h2>Scrape Logs</h2>
-                <p>Recent runs with status and counts</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Scrape logs</CardTitle>
+              <CardDescription>Recent runs with status and counts.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {logs.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Found</TableHead>
+                        <TableHead>Saved</TableHead>
+                        <TableHead>Started</TableHead>
+                        <TableHead>Completed</TableHead>
+                        <TableHead>Response</TableHead>
+                        <TableHead>Error</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {logs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="font-medium">{log.source}</TableCell>
+                          <TableCell>
+                            <StatusBadge status={log.status} />
+                          </TableCell>
+                          <TableCell>{log.jobsFound ?? 'N/A'}</TableCell>
+                          <TableCell>{log.jobsSaved ?? 'N/A'}</TableCell>
+                          <TableCell>{log.startedAt ?? 'N/A'}</TableCell>
+                          <TableCell>{log.completedAt ?? 'N/A'}</TableCell>
+                          <TableCell>{log.responseTimeMs ? `${log.responseTimeMs} ms` : 'N/A'}</TableCell>
+                          <TableCell>{log.errorMessage ?? 'N/A'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No logs loaded yet.</p>
+              )}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-sm text-muted-foreground">
+                  Page {pageNumber} of {Math.max(totalPages, 1)}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void loadAdminData({ ...logFilters, page: Math.max(1, pageNumber - 1) })}
+                    disabled={loading || !hasLogsPage || pageNumber <= 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void loadAdminData({ ...logFilters, page: pageNumber + 1 })}
+                    disabled={loading || !hasLogsPage || (logsPage?.last ?? false)}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
-            </div>
-            {logs.length > 0 ? (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th>Found</th>
-                    <th>Saved</th>
-                    <th>Started</th>
-                    <th>Completed</th>
-                    <th>Response</th>
-                    <th>Error</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => (
-                    <tr key={log.id}>
-                      <td>{log.source}</td>
-                      <td>
-                        <StatusBadge status={log.status} />
-                      </td>
-                      <td>{log.jobsFound ?? 'N/A'}</td>
-                      <td>{log.jobsSaved ?? 'N/A'}</td>
-                      <td>{log.startedAt ?? 'N/A'}</td>
-                      <td>{log.completedAt ?? 'N/A'}</td>
-                      <td>{log.responseTimeMs ? `${log.responseTimeMs} ms` : 'N/A'}</td>
-                      <td>{log.errorMessage ?? 'N/A'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="status-line">No logs loaded yet.</p>
-            )}
-            <div className="actions">
-              <button
-                className="ghost"
-                type="button"
-                onClick={() =>
-                  void loadAdminData({ ...logFilters, page: Math.max(1, pageNumber - 1) })
-                }
-                disabled={loading || !hasLogsPage || pageNumber <= 1}
-              >
-                Previous
-              </button>
-              <span className="status-line">
-                Page {pageNumber} of {Math.max(totalPages, 1)}
-              </span>
-              <button
-                className="ghost"
-                type="button"
-                onClick={() => void loadAdminData({ ...logFilters, page: pageNumber + 1 })}
-                disabled={loading || !hasLogsPage || (logsPage?.last ?? false)}
-              >
-                Next
-              </button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="panel" style={{ marginTop: '24px' }}>
-            <div className="panel-header">
-              <div>
-                <h2>Source Health</h2>
-                <p>Latest status per source</p>
-              </div>
-            </div>
-            {status.length > 0 ? (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th>Started</th>
-                    <th>Completed</th>
-                    <th>Found</th>
-                    <th>Saved</th>
-                    <th>Response</th>
-                    <th>Error</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {status.map((item) => (
-                    <tr key={item.source}>
-                      <td>{item.source}</td>
-                      <td>
-                        <StatusBadge status={item.status} />
-                      </td>
-                      <td>{item.startedAt ?? 'N/A'}</td>
-                      <td>{item.completedAt ?? 'N/A'}</td>
-                      <td>{item.jobsFound ?? 'N/A'}</td>
-                      <td>{item.jobsSaved ?? 'N/A'}</td>
-                      <td>{item.responseTimeMs ? `${item.responseTimeMs} ms` : 'N/A'}</td>
-                      <td>{item.errorMessage ?? 'N/A'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="status-line">No status data loaded yet.</p>
-            )}
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Source health</CardTitle>
+              <CardDescription>Latest status per source.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {status.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Started</TableHead>
+                        <TableHead>Completed</TableHead>
+                        <TableHead>Found</TableHead>
+                        <TableHead>Saved</TableHead>
+                        <TableHead>Response</TableHead>
+                        <TableHead>Error</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {status.map((item) => (
+                        <TableRow key={item.source}>
+                          <TableCell className="font-medium">{item.source}</TableCell>
+                          <TableCell>
+                            <StatusBadge status={item.status} />
+                          </TableCell>
+                          <TableCell>{item.startedAt ?? 'N/A'}</TableCell>
+                          <TableCell>{item.completedAt ?? 'N/A'}</TableCell>
+                          <TableCell>{item.jobsFound ?? 'N/A'}</TableCell>
+                          <TableCell>{item.jobsSaved ?? 'N/A'}</TableCell>
+                          <TableCell>{item.responseTimeMs ? `${item.responseTimeMs} ms` : 'N/A'}</TableCell>
+                          <TableCell>{item.errorMessage ?? 'N/A'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No status data loaded yet.</p>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
     </section>
