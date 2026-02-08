@@ -10,6 +10,8 @@ export async function searchJobs(
   if (params.keyword) query.set('keyword', params.keyword);
   if (params.location) query.set('location', params.location);
   if (params.category) query.set('category', params.category);
+  if (params.sortBy) query.set('sortBy', params.sortBy);
+  if (params.sortDir) query.set('sortDir', params.sortDir);
   if (typeof params.page === 'number') query.set('page', String(params.page));
   if (typeof params.pageSize === 'number') query.set('pageSize', String(params.pageSize));
 
