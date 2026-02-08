@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { fetchScrapeLogs, fetchScrapeStatus } from '../api/admin';
+import { fetchScrapeLogs, fetchScrapeStatus, fetchScrapeSummary, runScraper } from '../api/admin';
 import { login } from '../api/auth';
 import StatusBadge from '../components/StatusBadge';
 import type { AuthResponse, LoginRequest } from '../types/auth';
-import type { ScrapeLog, ScrapeSourceStatus, ScrapeStatus } from '../types/admin';
+import type { ScrapeLog, ScrapeSourceStatus, ScrapeStatus, ScrapeSummary } from '../types/admin';
 import type { Page } from '../types/job';
 
 interface AdminPageProps {
@@ -36,10 +36,12 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
   const [logFilters, setLogFilters] = useState<LogFilters>(defaultLogFilters);
   const [logsPage, setLogsPage] = useState<Page<ScrapeLog> | null>(null);
   const [status, setStatus] = useState<ScrapeSourceStatus[]>([]);
+  const [summary, setSummary] = useState<ScrapeSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const isAuthenticated = token.trim().length > 0;
 
   const loadAdminData = async (nextFilters: LogFilters = logFilters) => {
@@ -47,7 +49,7 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
     setError(null);
 
     try {
-      const [logsResponse, statusResponse] = await Promise.all([
+      const [logsResponse, statusResponse, summaryResponse] = await Promise.all([
         fetchScrapeLogs(
           adminBase,
           {
@@ -59,10 +61,12 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
           token || undefined
         ),
         fetchScrapeStatus(adminBase, token || undefined),
+        fetchScrapeSummary(adminBase, token || undefined),
       ]);
 
       setLogsPage(logsResponse);
       setStatus(statusResponse);
+      setSummary(summaryResponse);
       setLogFilters(nextFilters);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load admin data.';
@@ -100,8 +104,10 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
     sessionStorage.removeItem(TOKEN_STORAGE_KEY);
     setLogsPage(null);
     setStatus([]);
+    setSummary(null);
     setError(null);
     setAuthMessage(null);
+    setActionMessage(null);
   };
 
   const handleTokenChange = (value: string) => {
@@ -116,6 +122,19 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
   const resetFilters = () => {
     setLogFilters(defaultLogFilters);
     void loadAdminData(defaultLogFilters);
+  };
+
+  const handleRunScraper = async () => {
+    setActionMessage(null);
+    setError(null);
+    try {
+      await runScraper(adminBase, token || undefined);
+      setActionMessage('Scrape triggered. Refreshing status...');
+      await loadAdminData(logFilters);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to run scraper.';
+      setError(message);
+    }
   };
 
   const logs = logsPage?.content ?? [];
@@ -199,6 +218,7 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
           </div>
 
           {authMessage ? <p className="status-line">{authMessage}</p> : null}
+          {actionMessage ? <p className="status-line">{actionMessage}</p> : null}
 
           <div className="filters" style={{ marginTop: '16px' }}>
             <label className="field">
@@ -254,6 +274,9 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
               <button className="primary" type="button" onClick={() => void loadAdminData(logFilters)}>
                 {loading ? 'Loading...' : 'Load Logs & Status'}
               </button>
+              <button className="ghost" type="button" onClick={() => void handleRunScraper()}>
+                Run Scraper
+              </button>
               <button className="ghost" type="button" onClick={resetFilters} disabled={loading}>
                 Reset
               </button>
@@ -261,6 +284,47 @@ export default function AdminPage({ apiBase, adminBase }: AdminPageProps) {
           </div>
 
           {error ? <p className="status-line">{error}</p> : null}
+
+          {summary ? (
+            <div className="panel" style={{ marginTop: '24px' }}>
+              <div className="panel-header">
+                <div>
+                  <h2>Summary</h2>
+                  <p>Latest run overview across all sources</p>
+                </div>
+              </div>
+              <div className="summary-grid">
+                <div>
+                  <p className="eyebrow">Sources</p>
+                  <p>{summary.totalSources}</p>
+                </div>
+                <div>
+                  <p className="eyebrow">Success</p>
+                  <p>{summary.successCount}</p>
+                </div>
+                <div>
+                  <p className="eyebrow">Partial</p>
+                  <p>{summary.partialCount}</p>
+                </div>
+                <div>
+                  <p className="eyebrow">Failed</p>
+                  <p>{summary.failedCount}</p>
+                </div>
+                <div>
+                  <p className="eyebrow">Running</p>
+                  <p>{summary.runningCount}</p>
+                </div>
+                <div>
+                  <p className="eyebrow">Latest started</p>
+                  <p>{summary.latestStartedAt ?? 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="eyebrow">Latest completed</p>
+                  <p>{summary.latestCompletedAt ?? 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <div className="panel" style={{ marginTop: '24px' }}>
             <div className="panel-header">

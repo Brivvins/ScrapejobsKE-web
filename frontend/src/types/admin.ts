@@ -9,7 +9,9 @@ export interface ScrapeLog {
   startedAt?: string;
   completedAt?: string;
   responseTimeMs?: number;
+  errorCount?: number;
   errorMessage?: string;
+  errorSamples?: string;
 }
 
 export interface ScrapeSourceStatus {
@@ -20,7 +22,9 @@ export interface ScrapeSourceStatus {
   jobsFound?: number;
   jobsSaved?: number;
   responseTimeMs?: number;
+  errorCount?: number;
   errorMessage?: string;
+  errorSamples?: string;
 }
 
 export interface ScrapeLogFilters {
@@ -28,4 +32,15 @@ export interface ScrapeLogFilters {
   status?: ScrapeStatus;
   page?: number;
   size?: number;
+}
+
+export interface ScrapeSummary {
+  totalSources: number;
+  latestStartedAt?: string;
+  latestCompletedAt?: string;
+  successCount: number;
+  partialCount: number;
+  failedCount: number;
+  runningCount: number;
+  sources: ScrapeSourceStatus[];
 }
