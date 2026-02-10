@@ -110,19 +110,19 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
   const totalPages = logsPage?.totalPages ?? 0;
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5 sm:space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>Admin Monitoring</CardTitle>
               <CardDescription>Secure visibility into scrape health and execution logs.</CardDescription>
             </div>
-            <Badge className="bg-secondary text-secondary-foreground">Secure</Badge>
+            <Badge className="self-start bg-secondary text-secondary-foreground sm:self-auto">Secure</Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+          <div className="flex flex-col items-start gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
               POST {apiBase}/auth/login · GET {adminBase}/scrape/logs · GET {adminBase}/scrape/status
             </span>
@@ -155,12 +155,13 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
               <CardDescription>Filter scrape logs and trigger a fresh run.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Log source
                   </label>
                   <Input
+                    className="text-base sm:text-sm"
                     value={logFilters.source}
                     onChange={(event) =>
                       setLogFilters({ ...logFilters, source: event.target.value, page: 1 })
@@ -173,6 +174,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                     Status
                   </label>
                   <Select
+                    className="text-base sm:text-sm"
                     value={logFilters.status}
                     onChange={(event) =>
                       setLogFilters({
@@ -195,6 +197,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                     Page size
                   </label>
                   <Select
+                    className="text-base sm:text-sm"
                     value={logFilters.size}
                     onChange={(event) =>
                       setLogFilters({
@@ -212,21 +215,19 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                   </Select>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={() => void loadAdminData(logFilters)} disabled={loading}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                <Button className="w-full sm:w-auto" onClick={() => void loadAdminData(logFilters)} disabled={loading}>
                   {loading ? 'Loading...' : 'Load Logs & Status'}
                 </Button>
-                <Button variant="secondary" onClick={() => void handleRunScraper()}>
+                <Button className="w-full sm:w-auto" variant="secondary" onClick={() => void handleRunScraper()}>
                   Run Scraper
                 </Button>
-                <Button variant="outline" onClick={resetFilters} disabled={loading}>
+                <Button className="w-full sm:w-auto" variant="outline" onClick={resetFilters} disabled={loading}>
                   Reset
                 </Button>
-                {error ? <span className="text-sm text-destructive">{error}</span> : null}
-                {actionMessage ? (
-                  <span className="text-sm text-muted-foreground">{actionMessage}</span>
-                ) : null}
               </div>
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {actionMessage ? <p className="text-sm text-muted-foreground">{actionMessage}</p> : null}
             </CardContent>
           </Card>
 
@@ -237,7 +238,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                 <CardDescription>Latest run overview across all sources.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {[
                     { label: 'Sources', value: summary.totalSources },
                     { label: 'Success', value: summary.successCount },
@@ -267,7 +268,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
             <CardContent className="space-y-4">
               {logs.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="min-w-[760px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Source</TableHead>
@@ -301,12 +302,13 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
               ) : (
                 <p className="text-sm text-muted-foreground">No logs loaded yet.</p>
               )}
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-sm text-muted-foreground">
                   Page {pageNumber} of {Math.max(totalPages, 1)}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                   <Button
+                    className="w-full sm:w-auto"
                     variant="outline"
                     size="sm"
                     onClick={() => void loadAdminData({ ...logFilters, page: Math.max(1, pageNumber - 1) })}
@@ -315,6 +317,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                     Previous
                   </Button>
                   <Button
+                    className="w-full sm:w-auto"
                     variant="outline"
                     size="sm"
                     onClick={() => void loadAdminData({ ...logFilters, page: pageNumber + 1 })}
@@ -335,7 +338,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
             <CardContent>
               {status.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="min-w-[760px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Source</TableHead>

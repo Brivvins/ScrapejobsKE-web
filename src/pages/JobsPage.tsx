@@ -51,7 +51,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
   const totalPages = results?.totalPages ?? 0;
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5 sm:space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Public Jobs</CardTitle>
@@ -59,7 +59,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
         </CardHeader>
         <CardContent>
           <form
-            className="grid gap-4 md:grid-cols-3"
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
             onSubmit={(event) => {
               event.preventDefault();
               void loadJobs({ ...filters, page: 1 });
@@ -70,6 +70,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
                 Keyword
               </label>
               <Input
+                className="text-base sm:text-sm"
                 value={filters.keyword}
                 onChange={(event) => setFilters({ ...filters, keyword: event.target.value })}
                 placeholder="e.g. frontend"
@@ -80,6 +81,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
                 Location
               </label>
               <Input
+                className="text-base sm:text-sm"
                 value={filters.location}
                 onChange={(event) => setFilters({ ...filters, location: event.target.value })}
                 placeholder="e.g. Nairobi"
@@ -90,6 +92,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
                 Category
               </label>
               <Input
+                className="text-base sm:text-sm"
                 value={filters.category}
                 onChange={(event) => setFilters({ ...filters, category: event.target.value })}
                 placeholder="e.g. Engineering"
@@ -100,6 +103,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
                 Sort by
               </label>
               <Select
+                className="text-base sm:text-sm"
                 value={filters.sortBy}
                 onChange={(event) =>
                   setFilters({
@@ -130,6 +134,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
                 Sort direction
               </label>
               <Select
+                className="text-base sm:text-sm"
                 value={filters.sortDir}
                 onChange={(event) =>
                   setFilters({
@@ -148,6 +153,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
                 Page size
               </label>
               <Select
+                className="text-base sm:text-sm"
                 value={filters.pageSize}
                 onChange={(event) =>
                   setFilters({
@@ -164,11 +170,12 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
                 ))}
               </Select>
             </div>
-            <div className="flex items-end gap-3">
-              <Button type="submit" disabled={loading}>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+              <Button className="w-full sm:w-auto" type="submit" disabled={loading}>
                 {loading ? 'Loading...' : 'Search'}
               </Button>
               <Button
+                className="w-full sm:w-auto"
                 variant="outline"
                 type="button"
                 onClick={() => void loadJobs({ ...defaultFilters })}
@@ -179,7 +186,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
             </div>
           </form>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-3">
             <span className="font-semibold text-foreground">
               {results ? `${results.totalElements} jobs` : 'No results yet'}
             </span>
@@ -190,7 +197,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {jobs.map((job, index) => (
           <JobCard key={job.id ?? `${job.title}-${index}`} job={job} index={index} />
         ))}
@@ -198,19 +205,20 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
 
       {!loading && jobs.length === 0 ? (
         <Card>
-          <CardContent className="text-sm text-muted-foreground">
+          <CardContent className="text-center text-sm text-muted-foreground sm:text-left">
             No jobs match the current filters. Try a different keyword or location.
           </CardContent>
         </Card>
       ) : null}
 
       <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+        <CardContent className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
             Page {pageNumber} of {Math.max(totalPages, 1)}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
+              className="w-full sm:w-auto"
               variant="outline"
               size="sm"
               onClick={() => void loadJobs({ ...filters, page: Math.max(1, pageNumber - 1) })}
@@ -219,6 +227,7 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
               Previous
             </Button>
             <Button
+              className="w-full sm:w-auto"
               variant="outline"
               size="sm"
               onClick={() => void loadJobs({ ...filters, page: pageNumber + 1 })}

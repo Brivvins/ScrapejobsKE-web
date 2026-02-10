@@ -81,28 +81,28 @@ export default function App() {
 
   return (
     <div className="relative">
-      <div className="container mx-auto flex min-h-screen flex-col gap-10 pb-12 pt-10">
-        <header className="flex flex-col gap-6">
-          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="max-w-2xl space-y-4">
-              <Badge className="w-fit bg-primary/10 text-primary">ScrapejobsKE</Badge>
+      <div className="container mx-auto flex min-h-screen flex-col gap-8 px-4 pb-10 pt-6 sm:gap-10 sm:px-6 sm:pb-12 sm:pt-8 lg:px-8">
+        <header className="flex flex-col gap-8">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl space-y-5 text-center sm:text-left">
+              <Badge className="mx-auto w-fit bg-primary/10 text-primary sm:mx-0">ScrapejobsKE</Badge>
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+                <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
                   Kenyan jobs, unified into a developer-first API.
                 </h1>
-                <p className="text-base text-muted-foreground md:text-lg">
+                <p className="text-base text-muted-foreground sm:text-lg">
                   ScrapejobsKE aggregates listings from trusted local sources and exposes them through
                   a clean API that powers job boards, alerts, and hiring analytics.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground sm:justify-start sm:text-sm">
                 <span className="font-semibold text-foreground">API base</span>
                 <span className="rounded-full border border-border bg-background/70 px-3 py-1 font-mono text-xs">
                   {API_BASE}
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 sm:justify-end">
               {view === 'admin' ? (
                 <Button variant="outline" size="sm" onClick={() => setView('jobs')}>
                   Back to jobs
@@ -115,10 +115,13 @@ export default function App() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:grid sm:snap-none sm:gap-4 sm:overflow-visible sm:px-0 sm:grid-cols-2 lg:grid-cols-3">
             {HIGHLIGHTS.map((item) => (
-              <Card key={item.label} className="border-border/70 bg-background/70">
-                <CardContent className="flex flex-col gap-2">
+              <Card
+                key={item.label}
+                className="min-w-[220px] snap-start border-border/70 bg-background/70 sm:min-w-0"
+              >
+                <CardContent className="flex flex-col gap-2 p-4 sm:p-6">
                   <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {item.label}
                   </span>
@@ -139,7 +142,7 @@ export default function App() {
 
         <footer className="mt-auto space-y-4 text-sm text-muted-foreground">
           <Separator />
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold text-foreground">Docs:</span>
               <a
@@ -153,7 +156,7 @@ export default function App() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs uppercase tracking-[0.2em]"
+                className="w-full text-xs uppercase tracking-[0.2em] sm:w-auto"
                 onClick={view === 'admin' ? () => setView('jobs') : openAdmin}
               >
                 {view === 'admin' ? 'Exit admin' : 'Admin access'}
@@ -171,7 +174,7 @@ export default function App() {
             aria-hidden="true"
           />
           <Card className="relative z-10 w-full max-w-md border-border/70 bg-background/95">
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold">Admin sign in</h2>
@@ -190,6 +193,7 @@ export default function App() {
                   </label>
                   <Input
                     type="email"
+                    className="text-base sm:text-sm"
                     value={adminEmail}
                     onChange={(event) => setAdminEmail(event.target.value)}
                     placeholder="admin@example.com"
@@ -202,6 +206,7 @@ export default function App() {
                   </label>
                   <Input
                     type="password"
+                    className="text-base sm:text-sm"
                     value={adminPassword}
                     onChange={(event) => setAdminPassword(event.target.value)}
                     placeholder="Enter password"
@@ -209,11 +214,11 @@ export default function App() {
                   />
                 </div>
                 {authMessage ? <p className="text-sm text-destructive">{authMessage}</p> : null}
-                <div className="flex items-center gap-2">
-                  <Button onClick={() => void handleLogin()} disabled={authLoading}>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Button className="w-full sm:w-auto" onClick={() => void handleLogin()} disabled={authLoading}>
                     {authLoading ? 'Signing in...' : 'Sign in'}
                   </Button>
-                  <Button variant="outline" onClick={() => setAdminModalOpen(false)}>
+                  <Button className="w-full sm:w-auto" variant="outline" onClick={() => setAdminModalOpen(false)}>
                     Cancel
                   </Button>
                 </div>
