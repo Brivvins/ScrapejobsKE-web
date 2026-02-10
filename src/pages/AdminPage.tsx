@@ -123,13 +123,26 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-start gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              POST {apiBase}/auth/login · GET {adminBase}/scrape/logs · GET {adminBase}/scrape/status
-            </span>
+            <span>Admin controls are restricted to authorized users.</span>
             {isAuthenticated ? (
-              <Button variant="outline" size="sm" onClick={onLogout}>
-                Sign out
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    window.open(
+                      'https://scrapejobske.webredirect.org/swagger-ui/index.html',
+                      '_blank',
+                      'noopener,noreferrer'
+                    )
+                  }
+                >
+                  Docs
+                </Button>
+                <Button variant="outline" size="sm" onClick={onLogout}>
+                  Sign out
+                </Button>
+              </div>
             ) : null}
           </div>
         </CardContent>
@@ -252,7 +265,9 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {item.label}
                       </p>
-                      <p className="text-base font-semibold">{item.value}</p>
+                      <p className="break-words text-sm font-semibold leading-snug sm:text-base">
+                        {item.value}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -284,7 +299,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                     <TableBody>
                       {logs.map((log) => (
                         <TableRow key={log.id}>
-                          <TableCell className="font-medium">{log.source}</TableCell>
+                        <TableCell className="max-w-[160px] break-words font-medium">{log.source}</TableCell>
                           <TableCell>
                             <StatusBadge status={log.status} />
                           </TableCell>
@@ -293,7 +308,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                           <TableCell>{log.startedAt ?? 'N/A'}</TableCell>
                           <TableCell>{log.completedAt ?? 'N/A'}</TableCell>
                           <TableCell>{log.responseTimeMs ? `${log.responseTimeMs} ms` : 'N/A'}</TableCell>
-                          <TableCell>{log.errorMessage ?? 'N/A'}</TableCell>
+                        <TableCell className="max-w-[240px] break-words">{log.errorMessage ?? 'N/A'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -354,7 +369,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                     <TableBody>
                       {status.map((item) => (
                         <TableRow key={item.source}>
-                          <TableCell className="font-medium">{item.source}</TableCell>
+                        <TableCell className="max-w-[160px] break-words font-medium">{item.source}</TableCell>
                           <TableCell>
                             <StatusBadge status={item.status} />
                           </TableCell>
@@ -363,7 +378,7 @@ export default function AdminPage({ apiBase, adminBase, token, onLogout }: Admin
                           <TableCell>{item.jobsFound ?? 'N/A'}</TableCell>
                           <TableCell>{item.jobsSaved ?? 'N/A'}</TableCell>
                           <TableCell>{item.responseTimeMs ? `${item.responseTimeMs} ms` : 'N/A'}</TableCell>
-                          <TableCell>{item.errorMessage ?? 'N/A'}</TableCell>
+                        <TableCell className="max-w-[240px] break-words">{item.errorMessage ?? 'N/A'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

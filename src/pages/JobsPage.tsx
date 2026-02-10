@@ -186,11 +186,10 @@ export default function JobsPage({ apiBase }: JobsPageProps) {
             </div>
           </form>
 
-          <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-3">
+          <div className="mt-4 text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">
               {results ? `${results.totalElements} jobs` : 'No results yet'}
             </span>
-            <span className="font-mono text-xs">GET {apiBase}/jobs/search</span>
           </div>
 
           {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}

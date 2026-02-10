@@ -95,12 +95,6 @@ export default function App() {
                   a clean API that powers job boards, alerts, and hiring analytics.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground sm:justify-start sm:text-sm">
-                <span className="font-semibold text-foreground">API base</span>
-                <span className="rounded-full border border-border bg-background/70 px-3 py-1 font-mono text-xs">
-                  {API_BASE}
-                </span>
-              </div>
             </div>
             <div className="flex flex-wrap items-center gap-3 sm:justify-end">
               {view === 'admin' ? (
@@ -125,7 +119,9 @@ export default function App() {
                   <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {item.label}
                   </span>
-                  <span className="text-base font-semibold">{item.value}</span>
+                  <span className="break-words text-sm font-semibold leading-snug sm:text-base">
+                    {item.value}
+                  </span>
                 </CardContent>
               </Card>
             ))}
@@ -144,15 +140,6 @@ export default function App() {
           <Separator />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-foreground">Docs:</span>
-              <a
-                href="https://scrapejobske.webredirect.org/swagger-ui/index.html"
-                className="underline decoration-dotted underline-offset-4"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Swagger UI
-              </a>
               <Button
                 variant="ghost"
                 size="sm"
